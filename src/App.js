@@ -2,40 +2,63 @@ import React, { useState } from "react";
 import { Route } from "react-router-dom";
 import { data } from "./data";
 
-// Bileşenler
+import { CartContext } from "./contexts/CartContext";
+import { ProductContext } from "./contexts/ProductContext";
+
 import Navigation from "./components/Navigation";
 import Products from "./components/Products";
 import ShoppingCart from "./components/ShoppingCart";
-
-import { CartContext } from "./contexts/cartContext";
-import { ProductContext } from "./contexts/productContext";
 
 function App() {
   const [products, setProducts] = useState(data);
   const [cart, setCart] = useState([]);
 
   const addItem = (item) => {
-    // verilen itemi sepete ekleyin
+    const newCart = [...cart, item];
+    setCart(newCart);
+    cartLocal(newCart);
   };
+  const removeItem = (id) => {
+    const newCart = cart.filter((item) => item.id !== id);
+    setCart(newCart);
+    cartLocal(newCart);
+  };
+
+  function cartLocal() {
+    localStorage.setItem("cart", JSON.stringify());
+  }
+
+  function cartLocalGet(key) {
+    return JSON.parse(localStorage.getItem(key));
+  }
+
+  function initialStateLocal(key) {
+    const initialCart = cartLocalGet(key);
+
+    if (initialCart) {
+      return initialCart;
+    } else {
+      return [];
+    }
+  }
 
   return (
     <div className="App">
-      <CartContext.Provider>
-        <ProductContext.Provider>
+      <ProductContext.Provider value={{ products, addItem }}>
+        <CartContext.Provider value={{ cart, removeItem }}>
           <Navigation cart={cart} />
 
-          {/* Routelar */}
           <main className="content">
             <Route exact path="/">
-              <Products products={products} addItem={addItem} />
+              <Products />
             </Route>
 
             <Route path="/cart">
-              <ShoppingCart cart={cart} />
+              <ShoppingCart />
             </Route>
           </main>
-        </ProductContext.Provider>
-      </CartContext.Provider>
+        </CartContext.Provider>
+      </ProductContext.Provider>
     </div>
   );
 }
